@@ -1,3 +1,140 @@
+## v10beta1
+
+- [swiftDialog](https://github.com/bartreardon/swiftDialog) integration (#641, #632), many thanks to @bartreardon, [sample scripts](in the MDM folder)
+- added WorkspaceOne option for LOGO (#517)
+- added function for JSON parsing with JXA (#529)
+- updated assemble.sh script to update Labels.txt when script is rebuilt (#540)
+- added a no requisite install script (#493)
+- GitHub lookup now don't use API calls, this should avoid or at least reduce rate limiting (#543)
+- fixed redundant exit codes (#643, #561)
+
+NOTE: some exit codes have changed! see [Installomator Exit Codes](https://github.com/Installomator/Installomator/wiki/Installomator-Exit-Codes) for a list
+
+- new labels:
+	- bluejeanswithaudiodriver (#473)
+	- duodevicehealth (#548)
+	- googlechromeenterprise (#532)
+	- ipswupdater (#545)
+	- mmhmm (#571)
+	- nordlayer (#419)
+	- prune (#538)
+	- whatroute (#560)
+- updated labels:
+	- blender (#535, #622)
+	- camtasia2019 (#547)
+	- clickshare (#565)
+	- egnyte (#500)
+	- googledrive (#563)
+	- grammarly (#576)
+	- marathon, marathon2, marathoninfinity (#544)
+	- miro (#475, #539)
+	- notion (#566)
+	- ringcentralapp (#550)
+	- sublimetext (#593, #578, #567, #623, #626)
+	- talkdeskcallbar (#536)
+	- talkdeskcxcloud (#537)
+	- wireshark (#585)
+
+
+## v9.2
+
+**Note**: Both Google and Mozilla recommend using the pkg installers instead of the dmg downloads for managed deployments. So far, Installomator has provided labels for both. (`googlechrome` and `googlechromepkg` or `firefox` and `firefoxpkg`, respectively) Since there are problems with the dmg downloads, a future release of Installomator will _disable_ the `firefox` and `googlechrome` dmg labels. You should switch to using `googlechromepkg` and `firefoxpkg` labels instead.
+
+- bug fix (#434)
+- documentation updates (#485, #494)
+- new labels:
+    - 1password8 (#514)
+	- ultimakercura
+	- androidstudio (#547)
+	- atextlegacy (#464)
+	- camtasia2019, camtasia2020 (#499)
+	- clue, cluefull (#481)
+	- craftmanagerforsketch
+	- displaylinkmanager (#448)
+	- drawio (#480)
+	- duckduckgo
+	- egnytewebedit (#512)
+	- filezilla (#522)
+	- firefoxpkg_intl
+	- flycut (#501)
+	- fontexplorer (#523)
+	- hype (#524)
+	- idrive (#507), idrivethin (#509)
+	- imageoptim (#525)
+	- linear (#519)
+	- macoslaps (#502)
+	- mightymike
+	- mindmanager (#479)
+	- pika (#526)
+	- propresenter7 (#394)
+	- qgis-pr
+	- shottr (#516)
+	- slab (#487)
+	- snagit2019, snagit2020, snagit2021 (#498)
+	- sonobus (#490)
+	- talkdeskcxcloud (#452)
+	- thunderbird_intl (#497)
+	- unnaturalscrollwheels (#503)
+	- wechat (#510)
+	- xeroxworkcentre7800 (#527)
+	- zohoworkdrivegenie
+- updated labels
+	- adobereaderdc-update, adobereaderdc (#503)
+	- amazoncorretto8jdk (#461)
+	- camtasia (#499)
+	- citrixworkspace (#508)
+	- dbeaverce (#450)
+	- dropbox
+	- firefox, firefox_da, firefox_intl (#495), firefoxesr_intl (#496), firefoxpkg
+	- googlechrome, googlechromepkg (#484)
+	- gpgsuite (#465)
+	- grammarly (#515)
+	- logitechoptions (#478)
+	- onlyofficedesktop (#454)
+	- postman (#458)
+	- rancherdesktop (#463)
+	- remotedesktopmanagerenterprise
+	- remotedesktopmanagerfree
+	- ringcentralapp (#492)
+	- sketch
+	- snagit (#498)
+	- talkdeskcallbar (#453)
+
+
+
+## v9.1
+
+
+- added option for Microsoft Endpoint Manager (Intune) to `LOGO` (#446)
+- minor fixes (#427, #434, #436)
+- the `googlechrome` label now always downloads the universal version (#430)
+- new labels:
+    - 1passwordcli (#429)
+    - amazoncorretto8jdk (#423)
+    - autodeskfusion360admininstall (#447)
+    - axurerp10 (#439)
+    - calcservice (#426)
+    - clipy (#412)
+    - dockutil (#432)
+    - easyfind (#426)
+    - grammarly (#444)
+    - houdahspot (#426)
+    - macadminspython (#431)
+    - microsoftazuredatastudio (#438)
+    - nanosaur (#426)
+    - tembo (#426)
+    - wordservice (#426)
+    - xmenu (#426)
+- updated labels:
+    - appcleaner (#428)
+    - dialog (#435, #437)
+    - googlechrome (#430)
+    - microsoftdefender (#440)
+    - supportapp (#426)
+    - zoom and zoomgov (#426, #433)
+
+
+
 ## v9.0.1
 
 - improved logging levels throughout the script #408

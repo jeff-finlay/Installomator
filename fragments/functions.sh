@@ -22,7 +22,7 @@ cleanupAndExit() { # $1 = exit code, $2 message, $3 level
         printlog "$2" $3
     fi
     printlog "################## End Installomator, exit code $1 \n" REQ
-    
+
     # if label is wrong and we wanted name of the label, then return ##################
     if [[ $RETURN_LABEL_NAME -eq 1 ]]; then
         1=0 # If only label name should be returned we exit without any errors
@@ -156,11 +156,11 @@ downloadURLFromGit() { # $1 git user name, $2 git repo name
     fi
 
     if [ -n "$archiveName" ]; then
-    downloadURL=$(curl --silent --fail "https://api.github.com/repos/$gitusername/$gitreponame/releases/latest" \
-    | awk -F '"' "/browser_download_url/ && /$archiveName\"/ { print \$4; exit }")
+        #downloadURL=$(curl -L --silent --fail "https://api.github.com/repos/$gitusername/$gitreponame/releases/latest" | awk -F '"' "/browser_download_url/ && /$archiveName\"/ { print \$4; exit }")
+        downloadURL=https://github.com$(curl -sL "https://github.com/$gitusername/$gitreponame/releases/latest" | tr '"' "\n" | grep -o "\/$gitusername\/$gitreponame.*$archiveName.*")
     else
-    downloadURL=$(curl --silent --fail "https://api.github.com/repos/$gitusername/$gitreponame/releases/latest" \
-    | awk -F '"' "/browser_download_url/ && /$filetype\"/ { print \$4; exit }")
+        #downloadURL=$(curl -L --silent --fail "https://api.github.com/repos/$gitusername/$gitreponame/releases/latest" | awk -F '"' "/browser_download_url/ && /$filetype\"/ { print \$4; exit }")
+        downloadURL=https://github.com$(curl -sL "https://github.com/$gitusername/$gitreponame/releases/latest" | tr '"' "\n" | grep -o "\/$gitusername\/$gitreponame.*\.$filetype")
     fi
     if [ -z "$downloadURL" ]; then
         cleanupAndExit 9 "could not retrieve download URL for $gitusername/$gitreponame" ERROR
@@ -176,7 +176,8 @@ versionFromGit() {
     gitusername=${1?:"no git user name"}
     gitreponame=${2?:"no git repo name"}
 
-    appNewVersion=$(curl --silent --fail "https://api.github.com/repos/$gitusername/$gitreponame/releases/latest" | grep tag_name | cut -d '"' -f 4 | sed 's/[^0-9\.]//g')
+    #appNewVersion=$(curl -L --silent --fail "https://api.github.com/repos/$gitusername/$gitreponame/releases/latest" | grep tag_name | cut -d '"' -f 4 | sed 's/[^0-9\.]//g')
+    appNewVersion=$(curl -sLI "https://github.com/$gitusername/$gitreponame/releases/latest" | grep -i "^location" | tr "/" "\n" | tail -1 | sed 's/[^0-9\.]//g')
     if [ -z "$appNewVersion" ]; then
         printlog "could not retrieve version number for $gitusername/$gitreponame" WARN
         appNewVersion=""
@@ -199,6 +200,16 @@ xpath() {
 	fi
 }
 
+# from @Pico: https://macadmins.slack.com/archives/CGXNNJXJ9/p1652222365989229?thread_ts=1651786411.413349&cid=CGXNNJXJ9
+getJSONValue() {
+	# $1: JSON string OR file path to parse (tested to work with up to 1GB string and 2GB file).
+	# $2: JSON key path to look up (using dot or bracket notation).
+	printf '%s' "$1" | /usr/bin/osascript -l 'JavaScript' \
+		-e "let json = $.NSString.alloc.initWithDataEncoding($.NSFileHandle.fileHandleWithStandardInput.readDataToEndOfFile$(/usr/bin/uname -r | /usr/bin/awk -F '.' '($1 > 18) { print "AndReturnError(ObjC.wrap())" }'), $.NSUTF8StringEncoding)" \
+		-e 'if ($.NSFileManager.defaultManager.fileExistsAtPath(json)) json = $.NSString.stringWithContentsOfFileEncodingError(json, $.NSUTF8StringEncoding, ObjC.wrap())' \
+		-e "const value = JSON.parse(json.js)$([ -n "${2%%[.[]*}" ] && echo '.')$2" \
+		-e 'if (typeof value === "object") { JSON.stringify(value, null, 4) } else { value }'
+}
 
 getAppVersion() {
     # modified by: Søren Theilgaard (@theilgaard) and Isaac Ordonez
@@ -242,8 +253,8 @@ getAppVersion() {
 #        printlog "App(s) found: ${applist}" DEBUG
 #        applist=$(mdfind "kind:application AND name:$appName" -0 )
     fi
-    if [[ -z applist ]]; then
-        printlog "No previous app found" INFO
+    if [[ -z $applist ]]; then
+        printlog "No previous app found" WARN
     else
         printlog "App(s) found: ${applist}" INFO
     fi
@@ -265,7 +276,7 @@ getAppVersion() {
             if [[ -d "$installedAppPath"/Contents/_MASReceipt ]];then
                 printlog "Installed $appName is from App Store, use “IGNORE_APP_STORE_APPS=yes” to replace."
                 if [[ $IGNORE_APP_STORE_APPS == "yes" ]]; then
-                    printlog "Replacing App Store apps, no matter the version"
+                    printlog "Replacing App Store apps, no matter the version" WARN
                     appversion=0
                 else
                     cleanupAndExit 1 "App previously installed from App Store, and we respect that" ERROR
@@ -444,7 +455,7 @@ installAppWithPath() { # $1: path to app to install in $targetDir
                 printlog "notifying"
                 displaynotification "$message" "No update for $name!"
             fi
-            cleanupAndExit 0 "No new version to install" WARN
+            cleanupAndExit 0 "No new version to install" REG
         else
             printlog "Using force to install anyway."
         fi
@@ -486,7 +497,7 @@ installAppWithPath() { # $1: path to app to install in $targetDir
 
         # remove existing application
         if [ -e "$targetDir/$appName" ]; then
-            printlog "Removing existing $targetDir/$appName" DEBUG
+            printlog "Removing existing $targetDir/$appName" WARN
             deleteAppOut=$(rm -Rfv "$targetDir/$appName" 2>&1)
             tempName="$targetDir/$appName"
             tempNameLength=$((${#tempName} + 10))
@@ -497,16 +508,21 @@ installAppWithPath() { # $1: path to app to install in $targetDir
 
         # copy app to /Applications
         printlog "Copy $appPath to $targetDir"
-        if ! ditto "$appPath" "$targetDir/$appName"; then
-            cleanupAndExit 7 "Error while copying" ERROR
+        copyAppOut=$(ditto -v "$appPath" "$targetDir/$appName" 2>&1)
+        copyAppStatus=$(echo $?)
+        deduplicatelogs "$copyAppOut"
+        printlog "Debugging enabled, App copy output was:\n$logoutput" DEBUG
+        if [[ $copyAppStatus -ne 0 ]] ; then
+        #if ! ditto "$appPath" "$targetDir/$appName"; then
+            cleanupAndExit 7 "Error while copying:\n$logoutput" ERROR
         fi
 
         # set ownership to current user
         if [[ "$currentUser" != "loginwindow" && $SYSTEMOWNER -ne 1 ]]; then
-            printlog "Changing owner to $currentUser"
+            printlog "Changing owner to $currentUser" WARN
             chown -R "$currentUser" "$targetDir/$appName"
         else
-            printlog "No user logged in or SYSTEMOWNER=1, setting owner to root:wheel"
+            printlog "No user logged in or SYSTEMOWNER=1, setting owner to root:wheel" WARN
             chown -R root:wheel "$targetDir/$appName"
         fi
 
@@ -604,7 +620,7 @@ installFromPKG() {
                     printlog "notifying"
                     displaynotification "$message" "No update for $name!"
                 fi
-                cleanupAndExit 0 "No new version to install" WARN
+                cleanupAndExit 0 "No new version to install" REQ
             else
                 printlog "Using force to install anyway."
             fi
@@ -814,7 +830,7 @@ finishing() {
         message="Installed $name, version $appversion"
     fi
 
-    printlog "$message"
+    printlog "$message" REQ
 
     if [[ $currentUser != "loginwindow" && ( $NOTIFY == "success" || $NOTIFY == "all" ) ]]; then
         printlog "notifying"
